@@ -10,12 +10,15 @@ def load_csv(fp, key=None, dialect=None):
         peek = fp.read(1024**2)
         fp.seek(0)
         try:
-            dialect = csv.Sniffer().sniff(peek, delimiters=",\t;")
+            dialect = csv.Sniffer().sniff(peek, delimiters=",;\t")
         except csv.Error:
             # Oh well, we tried. Fallback to the default.
             pass
     fp = csv.reader(fp, dialect=(dialect or "excel"))
-    headings = next(fp)
+    try:
+        headings = next(fp)
+    except StopIteration:
+        raise ValueError("CSV file is empty or has no data rows")
     rows = [dict(zip(headings, line)) for line in fp]
     if key:
         keyfn = lambda r: r[key]
