@@ -115,3 +115,26 @@ def test_tsv():
         "columns_added": [],
         "columns_removed": [],
     } == diff
+
+
+def test_empty_dicts_return_empty_result():
+    from csv_diff import compare
+    diff = compare({}, {})
+    assert diff == {
+        "added": [],
+        "removed": [],
+        "changed": [],
+        "columns_added": [],
+        "columns_removed": [],
+    }
+
+
+def test_one_empty_dict_raises():
+    import io
+    from csv_diff import compare, load_csv
+    prev = load_csv(io.StringIO("id,name\n1,Cleo"), key="id")
+    import pytest
+    with pytest.raises(ValueError, match="Both previous and current must contain at least one row"):
+        compare(prev, {})
+    with pytest.raises(ValueError, match="Both previous and current must contain at least one row"):
+        compare({}, prev)

@@ -60,6 +60,12 @@ def compare(previous, current, show_unchanged=False):
         "columns_added": [],
         "columns_removed": [],
     }
+    if not previous or not current:
+        if not previous and not current:
+            return result
+        raise ValueError(
+            "Both previous and current must contain at least one row to compare."
+        )
     # Have the columns changed?
     previous_columns = set(next(iter(previous.values())).keys())
     current_columns = set(next(iter(current.values())).keys())
