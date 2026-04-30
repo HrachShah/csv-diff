@@ -60,6 +60,10 @@ def compare(previous, current, show_unchanged=False):
         "columns_added": [],
         "columns_removed": [],
     }
+    # If both dicts are empty, return early to avoid StopIteration on next()
+    if not previous and not current:
+        return result
+
     # Have the columns changed?
     previous_columns = set(next(iter(previous.values())).keys())
     current_columns = set(next(iter(current.values())).keys())
