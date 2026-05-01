@@ -125,7 +125,15 @@ def human_text(result, key=None, singular=None, plural=None, current=None, extra
     plural = plural or "rows"
     title = []
     summary = []
-    show_headers = sum(1 for key in result if result[key]) > 1
+    # Determine if we should show section headers
+    # Show headers if we have multiple distinct sections (columns, changes, adds, removes)
+    section_keys = ["columns_changed", "changed", "added", "removed"]
+    non_empty_sections = sum(1 for key in section_keys if result.get(key))
+    # Also include columns if any were added or removed
+    if result["columns_added"] or result["columns_removed"]:
+        show_headers = non_empty_sections > 0
+    else:
+        show_headers = non_empty_sections > 1
     if result["columns_added"]:
         fragment = "{} {} added".format(
             len(result["columns_added"]),
