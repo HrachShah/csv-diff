@@ -2,6 +2,7 @@ import csv
 from dictdiffer import diff
 import json
 import hashlib
+import re
 
 
 def load_csv(fp, key=None, dialect=None):
@@ -228,5 +229,8 @@ def human_extras(row, extras):
     bits = []
     bits.append("  extras:")
     for key, fmt in extras:
-        bits.append("    {}: {}".format(key, fmt.format(**row)))
+        # Extract placeholder names from the format string to avoid KeyError for missing fields
+        placeholders = re.findall(r'\{(\w+)\}', fmt)
+        safe_row = {k: row.get(k, '') for k in placeholders}
+        bits.append("    {}: {}".format(key, fmt.format(**safe_row)))
     return "\n".join(bits)
