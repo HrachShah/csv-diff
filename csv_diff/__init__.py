@@ -64,6 +64,14 @@ def compare(previous, current, show_unchanged=False):
     if not previous and not current:
         return result
 
+    # Handle edge case: if only one dict is empty, all rows are added or removed
+    if not previous:
+        result["added"] = list(current.values())
+        return result
+    if not current:
+        result["removed"] = list(previous.values())
+        return result
+
     # Have the columns changed?
     previous_columns = set(next(iter(previous.values())).keys())
     current_columns = set(next(iter(current.values())).keys())
