@@ -61,8 +61,10 @@ def compare(previous, current, show_unchanged=False):
         "columns_removed": [],
     }
     # Have the columns changed?
-    previous_columns = set(next(iter(previous.values())).keys())
-    current_columns = set(next(iter(current.values())).keys())
+    previous_values = list(previous.values())
+    current_values = list(current.values())
+    previous_columns = set(previous_values[0].keys()) if previous_values else set()
+    current_columns = set(current_values[0].keys()) if current_values else set()
     ignore_columns = None
     if previous_columns != current_columns:
         result["columns_added"] = [
