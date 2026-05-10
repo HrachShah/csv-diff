@@ -64,7 +64,7 @@ def cli(previous, current, key, format, json, singular, plural, show_unchanged, 
 
     def load(filename):
         if format == "json":
-            return load_json(open(filename), key=key)
+            return load_json(open(filename, encoding="utf-8"), key=key)
         else:
             return load_csv(
                 open(filename, newline=""), key=key, dialect=dialect.get(format)
