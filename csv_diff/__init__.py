@@ -113,7 +113,8 @@ def human_text(result, key=None, singular=None, plural=None, current=None, extra
     plural = plural or "rows"
     title = []
     summary = []
-    show_headers = sum(1 for key in result if result[key]) > 1
+    result_keys_with_data = [k for k in ("added", "removed", "changed", "columns_added", "columns_removed") if result[k]]
+    show_headers = len(result_keys_with_data) > 1
     if result["columns_added"]:
         fragment = "{} {} added".format(
             len(result["columns_added"]),
