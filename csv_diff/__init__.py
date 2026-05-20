@@ -111,9 +111,9 @@ def compare(previous, current, show_unchanged=False):
 def human_text(result, key=None, singular=None, plural=None, current=None, extras=None):
     singular = singular or "row"
     plural = plural or "rows"
+    result_keys_with_data = sum(1 for k in result if result[k]) > 1
     title = []
     summary = []
-    show_headers = sum(1 for key in result if result[key]) > 1
     if result["columns_added"]:
         fragment = "{} {} added".format(
             len(result["columns_added"]),
@@ -141,7 +141,7 @@ def human_text(result, key=None, singular=None, plural=None, current=None, extra
             len(result["changed"]), singular if len(result["changed"]) == 1 else plural
         )
         title.append(fragment)
-        if show_headers:
+        if result_keys_with_data:
             summary.append(fragment + "\n")
         change_blocks = []
         for details in result["changed"]:
@@ -169,7 +169,7 @@ def human_text(result, key=None, singular=None, plural=None, current=None, extra
             len(result["added"]), singular if len(result["added"]) == 1 else plural
         )
         title.append(fragment)
-        if show_headers:
+        if result_keys_with_data:
             summary.append(fragment + "\n")
         rows = []
         for row in result["added"]:
@@ -184,7 +184,7 @@ def human_text(result, key=None, singular=None, plural=None, current=None, extra
             len(result["removed"]), singular if len(result["removed"]) == 1 else plural
         )
         title.append(fragment)
-        if show_headers:
+        if result_keys_with_data:
             summary.append(fragment + "\n")
         rows = []
         for row in result["removed"]:
