@@ -42,6 +42,7 @@ def load_json(fp, key=None):
 
 
 def _simplify_json_row(r, common_keys):
+    r = dict(r)  # shallow copy so we do not mutate the caller's dict
     # Convert list/dict values into JSON serialized strings
     for key, value in r.items():
         if isinstance(value, (dict, tuple, list)):
