@@ -10,10 +10,11 @@ def load_csv(fp, key=None, dialect=None):
         peek = fp.read(1024**2)
         fp.seek(0)
         try:
-            dialect = csv.Sniffer().sniff(peek, delimiters=",\t;")
-        except csv.Error:
-            # Oh well, we tried. Fallback to the default.
-            pass
+            dialect = csv.Sniffer().sniff(peek, delimiters=",;\t")
+        except csv.Error as e:
+            # Fallback to default when CSV parsing fails — could be binary data, empty file, or unusual format.
+            import sys
+            print(f"Could not sniff CSV dialect: {e}", file=sys.stderr)
     fp = csv.reader(fp, dialect=(dialect or "excel"))
     headings = next(fp)
     rows = [dict(zip(headings, line)) for line in fp]
