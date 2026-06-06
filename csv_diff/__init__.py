@@ -60,9 +60,17 @@ def compare(previous, current, show_unchanged=False):
         "columns_added": [],
         "columns_removed": [],
     }
-    # Have the columns changed?
-    previous_columns = set(next(iter(previous.values())).keys())
-    current_columns = set(next(iter(current.values())).keys())
+    if not previous and not current:
+        raise ValueError("Cannot diff: both inputs are empty")
+    if not previous:
+        previous_columns = set()
+    else:
+        # Have the columns changed?
+        previous_columns = set(next(iter(previous.values())).keys())
+    if not current:
+        current_columns = set()
+    else:
+        current_columns = set(next(iter(current.values())).keys())
     ignore_columns = None
     if previous_columns != current_columns:
         result["columns_added"] = [
