@@ -5,7 +5,7 @@ import hashlib
 
 
 def load_csv(fp, key=None, dialect=None):
-    if dialect is None and fp.seekable():
+    if dialect is None and getattr(fp, "seekable", lambda: False)():
         # Peek at first 1MB to sniff the delimiter and other dialect details
         peek = fp.read(1024**2)
         fp.seek(0)
