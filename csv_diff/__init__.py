@@ -15,10 +15,26 @@ def load_csv(fp, key=None, dialect=None):
             # Oh well, we tried. Fallback to the default.
             pass
     fp = csv.reader(fp, dialect=(dialect or "excel"))
-    headings = next(fp)
+    try:
+        headings = next(fp)
+    except StopIteration:
+        # Empty file (or one with no header line) has no rows and no key column
+        # to look up. Returning an empty dict keeps `compare()` and the CLI
+        # happy so `csv-diff empty.csv empty.csv` exits cleanly with no diff
+        # instead of bubbling a bare StopIteration up to the click runner.
+        return {}
     rows = [dict(zip(headings, line)) for line in fp]
     if key:
-        keyfn = lambda r: r[key]
+        def keyfn(r):
+            if key not in r:
+                # Raising here would surface a KeyError that points at the
+                # wrong line of source code; convert it into a clear message
+                # that names the missing column so the user can fix the
+                # --key argument or the input file.
+                raise KeyError(
+                    f"Column {key!r} not found in CSV header {list(headings)!r}"
+                )
+            return r[key]
     else:
         keyfn = lambda r: hashlib.sha1(
             json.dumps(r, sort_keys=True).encode("utf8")
@@ -29,11 +45,21 @@ def load_csv(fp, key=None, dialect=None):
 def load_json(fp, key=None):
     raw_list = json.load(fp)
     assert isinstance(raw_list, list)
+    if not raw_list:
+        # An empty JSON list has no common keys and no rows to key on. Return
+        # the same shape as load_csv on an empty file (an empty dict) so the
+        # CLI can diff two empty files without crashing.
+        return {}
     common_keys = set()
     for item in raw_list:
         common_keys.update(item.keys())
     if key:
-        keyfn = lambda r: r[key]
+        def keyfn(r):
+            if key not in r:
+                raise KeyError(
+                    f"Column {key!r} not found in JSON record {list(r.keys())!r}"
+                )
+            return r[key]
     else:
         keyfn = lambda r: hashlib.sha1(
             json.dumps(r, sort_keys=True).encode("utf8")
@@ -61,6 +87,16 @@ def compare(previous, current, show_unchanged=False):
         "columns_removed": [],
     }
     # Have the columns changed?
+    if not previous or not current:
+        # At least one side has no rows, so there is no "previous row" we can
+        # sample to learn the column set. If both are empty the diff is empty
+        # by definition; if only one is empty, every row in the non-empty side
+        # is either added or removed with no per-row changes.
+        if previous and not current:
+            result["removed"] = list(previous.values())
+        elif current and not previous:
+            result["added"] = list(current.values())
+        return result
     previous_columns = set(next(iter(previous.values())).keys())
     current_columns = set(next(iter(current.values())).keys())
     ignore_columns = None
