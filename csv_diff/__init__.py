@@ -159,7 +159,15 @@ def human_text(result, key=None, singular=None, plural=None, current=None, extra
         change_blocks = []
         for details in result["changed"]:
             block = []
-            block.append("  {}: {}".format(key, details["key"]))
+            # The key column name (or the row hash in no-key mode) on the
+            # first line of each changed block. key defaults to None when
+            # the caller didn't pass one, in which case the row identifier
+            # is the content hash itself, so we render just the hash rather
+            # than "  None: <hash>".
+            if key:
+                block.append("  {}: {}".format(key, details["key"]))
+            else:
+                block.append("  {}".format(details["key"]))
             for field, (prev_value, current_value) in details["changes"].items():
                 block.append(
                     '    {}: "{}" => "{}"'.format(field, prev_value, current_value)
