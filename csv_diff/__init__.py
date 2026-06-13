@@ -60,6 +60,19 @@ def compare(previous, current, show_unchanged=False):
         "columns_added": [],
         "columns_removed": [],
     }
+    # When previous is empty we have no column schema to compare against
+    # AND every current row is an "added" row, so just populate result["added"]
+    # and return without touching next(iter(...)) which would crash on the
+    # empty previous dict.
+    if not previous:
+        result["added"] = list(current.values())
+        return result
+    # When current is empty we have no column schema to read for previous,
+    # so the column-intersection step below would crash. Populate
+    # result["removed"] from previous and return early.
+    if not current:
+        result["removed"] = list(previous.values())
+        return result
     # Have the columns changed?
     previous_columns = set(next(iter(previous.values())).keys())
     current_columns = set(next(iter(current.values())).keys())
