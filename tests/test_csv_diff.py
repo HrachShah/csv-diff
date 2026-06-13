@@ -115,3 +115,37 @@ def test_tsv():
         "columns_added": [],
         "columns_removed": [],
     } == diff
+
+
+def test_load_csv_empty_file():
+    diff = load_csv(io.StringIO(""))
+    assert diff == {}
+
+
+def test_compare_empty_previous():
+    diff = compare({}, {"1": {"id": "1", "name": "Cleo", "age": "5"}}, show_unchanged=True)
+    assert diff["added"] == [{"id": "1", "name": "Cleo", "age": "5"}]
+    assert diff["removed"] == []
+    assert diff["changed"] == []
+    assert sorted(diff["columns_added"]) == ["age", "id", "name"]
+    assert diff["columns_removed"] == []
+
+
+def test_compare_empty_current():
+    diff = compare({"1": {"id": "1", "name": "Cleo", "age": "5"}}, {})
+    assert diff["added"] == []
+    assert diff["removed"] == [{"id": "1", "name": "Cleo", "age": "5"}]
+    assert diff["changed"] == []
+    assert diff["columns_added"] == []
+    assert sorted(diff["columns_removed"]) == ["age", "id", "name"]
+
+
+def test_compare_both_empty():
+    diff = compare({}, {})
+    assert diff == {
+        "added": [],
+        "removed": [],
+        "changed": [],
+        "columns_added": [],
+        "columns_removed": [],
+    }

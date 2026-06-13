@@ -15,7 +15,12 @@ def load_csv(fp, key=None, dialect=None):
             # Oh well, we tried. Fallback to the default.
             pass
     fp = csv.reader(fp, dialect=(dialect or "excel"))
-    headings = next(fp)
+    try:
+        headings = next(fp)
+    except StopIteration:
+        # Empty file or file with no header row - return an empty mapping
+        # rather than raising StopIteration out of csv.reader
+        return {}
     rows = [dict(zip(headings, line)) for line in fp]
     if key:
         keyfn = lambda r: r[key]
@@ -29,6 +34,8 @@ def load_csv(fp, key=None, dialect=None):
 def load_json(fp, key=None):
     raw_list = json.load(fp)
     assert isinstance(raw_list, list)
+    if not raw_list:
+        return {}
     common_keys = set()
     for item in raw_list:
         common_keys.update(item.keys())
@@ -61,8 +68,14 @@ def compare(previous, current, show_unchanged=False):
         "columns_removed": [],
     }
     # Have the columns changed?
-    previous_columns = set(next(iter(previous.values())).keys())
-    current_columns = set(next(iter(current.values())).keys())
+    if not previous:
+        previous_columns = set()
+    else:
+        previous_columns = set(next(iter(previous.values())).keys())
+    if not current:
+        current_columns = set()
+    else:
+        current_columns = set(next(iter(current.values())).keys())
     ignore_columns = None
     if previous_columns != current_columns:
         result["columns_added"] = [
