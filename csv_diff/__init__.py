@@ -15,7 +15,10 @@ def load_csv(fp, key=None, dialect=None):
             # Oh well, we tried. Fallback to the default.
             pass
     fp = csv.reader(fp, dialect=(dialect or "excel"))
-    headings = next(fp)
+    try:
+        headings = next(fp)
+    except StopIteration:
+        raise ValueError("CSV input is empty (no header row found)")
     rows = [dict(zip(headings, line)) for line in fp]
     if key:
         keyfn = lambda r: r[key]
