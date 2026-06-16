@@ -300,3 +300,46 @@ def test_diff_with_extras(tmpdir):
     """
     ).strip()
     assert result.output.strip() == expected
+
+
+def test_cli_load_closes_file_handles(tmp_path):
+    """The CLI's internal load() helper must close the file it opens, not leak it
+    to the GC. We verify this by wrapping the open() builtin and counting the
+    number of files that were opened but not closed within the load() call.
+    """
+    import builtins
+    real_open = builtins.open
+    open_calls = []
+
+    def counting_open(*args, **kwargs):
+        fp = real_open(*args, **kwargs)
+        # Track files opened by the CLI; skip the test harness's own files.
+        # Anything opened in csv_diff.cli during the invocation is what we
+        # want to count.
+        open_calls.append(fp)
+        return fp
+
+    builtins.open = counting_open
+    try:
+        from click.testing import CliRunner
+        import csv_diff
+        # Re-import the cli module so its name binding picks up the new
+        # builtin at call time (the import statement `from . import` only
+        # binds the names, not the open() lookup).
+        import importlib
+        import csv_diff.cli
+        importlib.reload(csv_diff.cli)
+        one = tmp_path / "one.csv"
+        one.write_text(ONE)
+        two = tmp_path / "two.csv"
+        two.write_text(TWO)
+        result = CliRunner().invoke(
+            csv_diff.cli.cli, [str(one), str(two), "--key", "id"]
+        )
+        assert result.exit_code == 0
+    finally:
+        builtins.open = real_open
+
+    # Every file the CLI opened must be closed by the time invoke() returns.
+    leaked = [fp for fp in open_calls if not fp.closed]
+    assert not leaked, f"CLI leaked {len(leaked)} file handle(s): {leaked}"
