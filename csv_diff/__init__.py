@@ -61,8 +61,20 @@ def compare(previous, current, show_unchanged=False):
         "columns_removed": [],
     }
     # Have the columns changed?
-    previous_columns = set(next(iter(previous.values())).keys())
-    current_columns = set(next(iter(current.values())).keys())
+    # The previous implementation called next(iter(previous.values()))
+    # which raised StopIteration when either side was empty — an
+    # empty CSV (header only) is a valid input and should be reported
+    # as 'all rows added' or 'all rows removed', not a crash. Use
+    # the first row's keys if available, otherwise treat both sides
+    # as having no columns.
+    if previous:
+        previous_columns = set(next(iter(previous.values())).keys())
+    else:
+        previous_columns = set()
+    if current:
+        current_columns = set(next(iter(current.values())).keys())
+    else:
+        current_columns = set()
     ignore_columns = None
     if previous_columns != current_columns:
         result["columns_added"] = [

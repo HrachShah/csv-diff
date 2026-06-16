@@ -115,3 +115,50 @@ def test_tsv():
         "columns_added": [],
         "columns_removed": [],
     } == diff
+
+
+def test_compare_with_empty_previous():
+    # If 'previous' contains no rows, the diff should report all current
+    # rows as 'added' and the current columns as 'columns_added', instead
+    # of crashing on the next(iter(...)) call.
+    current = load_csv(io.StringIO(ONE), key="id")
+    diff = compare({}, current)
+    assert diff == {
+        "added": [
+            {"id": "1", "name": "Cleo", "age": "4"},
+            {"id": "2", "name": "Pancakes", "age": "2"},
+        ],
+        "removed": [],
+        "changed": [],
+        "columns_added": sorted(["age", "id", "name"]),
+        "columns_removed": [],
+    }
+
+
+def test_compare_with_empty_current():
+    # If 'current' contains no rows, the diff should report all previous
+    # rows as 'removed' and the previous columns as 'columns_removed'.
+    previous = load_csv(io.StringIO(ONE), key="id")
+    diff = compare(previous, {})
+    assert diff == {
+        "added": [],
+        "removed": [
+            {"id": "1", "name": "Cleo", "age": "4"},
+            {"id": "2", "name": "Pancakes", "age": "2"},
+        ],
+        "changed": [],
+        "columns_added": [],
+        "columns_removed": sorted(["age", "id", "name"]),
+    }
+
+
+def test_compare_both_empty():
+    # Two empty diffs should produce an empty result instead of crashing.
+    diff = compare({}, {})
+    assert diff == {
+        "added": [],
+        "removed": [],
+        "changed": [],
+        "columns_added": [],
+        "columns_removed": [],
+    }
