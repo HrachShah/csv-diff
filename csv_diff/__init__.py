@@ -63,6 +63,19 @@ def compare(previous, current, show_unchanged=False):
         "columns_added": [],
         "columns_removed": [],
     }
+    # When previous is empty we have no column schema to compare against
+    # AND every current row is an "added" row, so just populate result["added"]
+    # and return without touching next(iter(...)) which would crash on the
+    # empty previous dict.
+    if not previous:
+        result["added"] = list(current.values())
+        return result
+    # When current is empty we have no column schema to read for previous,
+    # so the column-intersection step below would crash. Populate
+    # result["removed"] from previous and return early.
+    if not current:
+        result["removed"] = list(previous.values())
+        return result
     # Have the columns changed?
     previous_columns = set(next(iter(previous.values())).keys())
     current_columns = set(next(iter(current.values())).keys())
@@ -149,7 +162,15 @@ def human_text(result, key=None, singular=None, plural=None, current=None, extra
         change_blocks = []
         for details in result["changed"]:
             block = []
-            block.append("  {}: {}".format(key, details["key"]))
+            # The key column name (or the row hash in no-key mode) on the
+            # first line of each changed block. key defaults to None when
+            # the caller didn't pass one, in which case the row identifier
+            # is the content hash itself, so we render just the hash rather
+            # than "  None: <hash>".
+            if key:
+                block.append("  {}: {}".format(key, details["key"]))
+            else:
+                block.append("  {}".format(details["key"]))
             for field, (prev_value, current_value) in details["changes"].items():
                 block.append(
                     '    {}: "{}" => "{}"'.format(field, prev_value, current_value)

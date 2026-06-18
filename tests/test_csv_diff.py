@@ -78,6 +78,51 @@ def test_row_added():
     } == diff
 
 
+def test_compare_handles_empty_inputs():
+    """Two empty dicts (e.g. an empty CSV/JSON file) used to crash
+    compare() with StopIteration on next(iter(previous.values())) because
+    the column-detection step assumed at least one row exists. The
+    short-circuit returns the all-empty result so human_text() renders an
+    empty string and the CLI exits 0."""
+    diff = compare({}, {})
+    assert diff == {
+        "added": [],
+        "removed": [],
+        "changed": [],
+        "columns_added": [],
+        "columns_removed": [],
+    }
+    from csv_diff import human_text
+
+    assert human_text(diff) == ""
+
+
+def test_compare_handles_one_side_empty():
+    """An empty previous vs a populated current should also short-circuit
+    cleanly; without the guard the column-detection step would crash with
+    StopIteration before the row-level diff could notice the additions."""
+    from csv_diff import load_csv
+    diff = compare({}, load_csv(io.StringIO(ONE), key="id"))
+    # All current rows are "added" relative to an empty previous; verify
+    # both rows are surfaced, not just one.
+    added_ids = sorted(r["id"] for r in diff["added"])
+    assert added_ids == ["1", "2"]
+    assert diff["changed"] == [] and diff["removed"] == []
+
+
+def test_compare_handles_previous_empty_for_human_text():
+    """The CLI used to crash with StopIteration on `csv-diff empty.csv
+    populated.csv` because compare() assumed both dicts had at least one
+    row. The empty-previous branch should now produce a '2 rows added'
+    human-readable summary via human_text()."""
+    from csv_diff import load_csv, human_text
+    diff = compare({}, load_csv(io.StringIO(ONE), key="id"))
+    rendered = human_text(diff, "id")
+    assert "2 rows added" in rendered
+    assert "Cleo" in rendered
+    assert "Pancakes" in rendered
+
+
 def test_row_removed():
     diff = compare(
         load_csv(io.StringIO(TWO), key="id"), load_csv(io.StringIO(THREE), key="id")

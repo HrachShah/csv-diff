@@ -222,3 +222,40 @@ def test_no_key():
         ).strip()
         == human_text(diff)
     )
+
+
+def test_no_key_changed_row_does_not_render_none_prefix():
+    """human_text used to render the changed-row identifier line as
+    '  None: <hash>' when the caller didn't pass a key column name and
+    the diff had 'changed' rows. The function parameter 'key' defaults
+    to None, and the format() call '{key}: {details[\"key\"]}' plugged
+    None through verbatim. In no-key mode there is no column name to
+    display, so the row identifier is just the content hash on its own
+    line. Pin that the literal 'None' is never rendered and that the
+    row hash is the only identifier on the first line of the block."""
+    ONE = "id,name,age\n1,Cleo,4\n2,Pancakes,2"
+    TWO = "id,name,age\n1,Cleo,5\n2,Pancakes,2"
+    diff = compare(
+        load_csv(io.StringIO(ONE), key="id"),
+        load_csv(io.StringIO(TWO), key="id"),
+    )
+    # Build a no-key diff by re-hashing on content instead of the id column.
+    no_key_diff = compare(
+        load_csv(io.StringIO(ONE)),
+        load_csv(io.StringIO(TWO)),
+    )
+    # No-key content hashes collide when rows differ, so the diff classifies
+    # the change as added/removed rather than 'changed'. To exercise the
+    # no-key + changed code path directly, monkey-build a 'changed' diff
+    # and call human_text with no key.
+    no_key_changed = {
+        "added": [],
+        "removed": [],
+        "changed": [{"key": "abc123", "changes": {"age": ["4", "5"]}}],
+        "columns_added": [],
+        "columns_removed": [],
+    }
+    out = human_text(no_key_changed)
+    assert "None" not in out, f"unexpected 'None' in human_text output: {out!r}"
+    assert "abc123" in out
+    assert out.startswith("1 row changed\n\n  abc123")
