@@ -152,7 +152,11 @@ def human_text(result, key=None, singular=None, plural=None, current=None, extra
             block.append("  {}: {}".format(key, details["key"]))
             for field, (prev_value, current_value) in details["changes"].items():
                 block.append(
-                    '    {}: "{}" => "{}"'.format(field, prev_value, current_value)
+                    '    {}: "{}" => "{}"'.format(
+                        field,
+                        _escape_newlines(prev_value),
+                        _escape_newlines(current_value),
+                    )
                 )
             if extras:
                 current_item = current[details["key"]]
@@ -163,7 +167,7 @@ def human_text(result, key=None, singular=None, plural=None, current=None, extra
                 block = []
                 block.append("    Unchanged:")
                 for field, value in details["unchanged"].items():
-                    block.append('      {}: "{}"'.format(field, value))
+                    block.append('      {}: "{}"'.format(field, _escape_newlines(value)))
                 block.append("")
                 change_blocks.append("\n".join(block))
         summary.append("\n".join(change_blocks))
@@ -200,10 +204,24 @@ def human_text(result, key=None, singular=None, plural=None, current=None, extra
     return (", ".join(title) + "\n\n" + ("\n".join(summary))).strip()
 
 
+def _escape_newlines(value):
+    """Escape literal newlines and carriage returns in a value for human output.
+
+    A quoted CSV cell can legitimately contain a newline character. Without
+    this escape, embedding that value into a line-oriented output format
+    (one field per line) makes the following field look like a new record.
+    Replace ``\\n`` and ``\\r`` with their two-character escape sequences
+    so the rendered line stays single-line and a developer reading the
+    output can still tell what was actually in the cell.
+    """
+    s = "" if value is None else str(value)
+    return s.replace("\r\n", "\\r\\n").replace("\n", "\\n").replace("\r", "\\r")
+
+
 def human_row(row, prefix=""):
     bits = []
     for key, value in row.items():
-        bits.append("{}{}: {}".format(prefix, key, value))
+        bits.append("{}{}: {}".format(prefix, key, _escape_newlines(value)))
     return "\n".join(bits)
 
 
@@ -211,5 +229,9 @@ def human_extras(row, extras):
     bits = []
     bits.append("  extras:")
     for key, fmt in extras:
-        bits.append("    {}: {}".format(key, fmt.format(**row)))
+        # Apply the user's format first, then escape newlines in the result
+        # so extras lines stay intact even when a formatted value contains
+        # an embedded newline (legitimate in a quoted CSV cell).
+        rendered = _escape_newlines(fmt.format(**row))
+        bits.append("    {}: {}".format(key, rendered))
     return "\n".join(bits)
