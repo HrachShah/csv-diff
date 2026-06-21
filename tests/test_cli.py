@@ -343,3 +343,56 @@ def test_cli_load_closes_file_handles(tmp_path):
     # Every file the CLI opened must be closed by the time invoke() returns.
     leaked = [fp for fp in open_calls if not fp.closed]
     assert not leaked, f"CLI leaked {len(leaked)} file handle(s): {leaked}"
+
+
+def test_load_json_rejects_dict_at_top_level(tmpdir):
+    """A JSON file whose top-level value is a dict (not a list) must raise a
+    clear TypeError naming the actual type, not an opaque AssertionError that
+    disappears under `python -O` and an AttributeError further down on
+    `.keys()` after the assertion is stripped.
+    """
+    one = tmpdir / "one.json"
+    one.write(json.dumps({"id": 1, "name": "Cleo"}))
+    two = tmpdir / "two.json"
+    two.write(json.dumps([{"id": 1, "name": "Cleo"}]))
+    result = CliRunner().invoke(
+        cli.cli,
+        [str(one), str(two), "--key", "id", "--format", "json", "--json"],
+    )
+    assert result.exit_code != 0
+    message = str(result.output) + (str(result.exception) if result.exception else "")
+    assert "array of objects" in message.lower()
+
+
+def test_load_json_rejects_non_dict_entries(tmpdir):
+    """A JSON array containing a non-dict entry (an int, a string, a list)
+    must raise a clear TypeError naming the index, not an AttributeError on
+    `int.keys()` that says nothing about which row was malformed.
+    """
+    one = tmpdir / "one.json"
+    one.write(json.dumps([{"id": 1, "name": "Cleo"}, 42, {"id": 3, "name": "x"}]))
+    two = tmpdir / "two.json"
+    two.write(json.dumps([{"id": 1, "name": "Cleo"}]))
+    result = CliRunner().invoke(
+        cli.cli,
+        [str(one), str(two), "--key", "id", "--format", "json", "--json"],
+    )
+    assert result.exit_code != 0
+    message = str(result.output) + (str(result.exception) if result.exception else "")
+    assert "every entry" in message.lower()
+
+
+def test_load_json_list_of_dicts_still_works(tmpdir):
+    """The valid case — a JSON array of dicts — must still diff cleanly."""
+    one = tmpdir / "one.json"
+    one.write(json.dumps([{"id": 1, "name": "Cleo", "age": 4}]))
+    two = tmpdir / "two.json"
+    two.write(json.dumps([{"id": 1, "name": "Cleo", "age": 5}]))
+    result = CliRunner().invoke(
+        cli.cli,
+        [str(one), str(two), "--key", "id", "--format", "json", "--json"],
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0, result.output
+    parsed = json.loads(result.output)
+    assert parsed["changed"] == [{"key": 1, "changes": {"age": [4, 5]}}]
