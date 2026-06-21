@@ -31,9 +31,18 @@ def load_csv(fp, key=None, dialect=None):
 
 def load_json(fp, key=None):
     raw_list = json.load(fp)
-    assert isinstance(raw_list, list)
+    if not isinstance(raw_list, list):
+        raise TypeError(
+            f"load_json expects a JSON array of objects at the top level, "
+            f"got {type(raw_list).__name__}"
+        )
     common_keys = set()
-    for item in raw_list:
+    for i, item in enumerate(raw_list):
+        if not isinstance(item, dict):
+            raise TypeError(
+                f"load_json expects every entry in the JSON array to be an object, "
+                f"got {type(item).__name__} at index {i}"
+            )
         common_keys.update(item.keys())
     if key:
         keyfn = lambda r: r[key]
@@ -64,8 +73,12 @@ def compare(previous, current, show_unchanged=False):
         "columns_removed": [],
     }
     # Have the columns changed?
-    previous_columns = set(next(iter(previous.values())).keys())
-    current_columns = set(next(iter(current.values())).keys())
+    previous_columns = (
+        set(next(iter(previous.values())).keys()) if previous else set()
+    )
+    current_columns = (
+        set(next(iter(current.values())).keys()) if current else set()
+    )
     ignore_columns = None
     if previous_columns != current_columns:
         result["columns_added"] = [

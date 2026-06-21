@@ -64,11 +64,10 @@ def cli(previous, current, key, format, json, singular, plural, show_unchanged, 
 
     def load(filename):
         if format == "json":
-            return load_json(open(filename), key=key)
-        else:
-            return load_csv(
-                open(filename, newline=""), key=key, dialect=dialect.get(format)
-            )
+            with open(filename) as fp:
+                return load_json(fp, key=key)
+        with open(filename, newline="") as fp:
+            return load_csv(fp, key=key, dialect=dialect.get(format))
 
     previous_data = load(previous)
     current_data = load(current)
