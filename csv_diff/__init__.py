@@ -94,12 +94,33 @@ def compare(previous, current, show_unchanged=False):
         result["removed"] = [previous[id] for id in removed]
     if changed:
         for id in changed:
-            diffs = list(diff(previous[id], current[id], ignore=ignore_columns))
+            # Pass dot_notation=False so dictdiffer treats every top-level
+            # column name as a flat key. With the default dot_notation=True,
+            # a column whose name contains '..' is parsed as a path with a
+            # parent step (e.g. 'name..date_range' becomes [parent, 'date_range']),
+            # and dictdiffer then emits 'add'/'remove' 2-tuples for the column
+            # swap instead of 'change' 3-tuples, which crashes the
+            # `for _, field, (prev, curr) in diffs` unpack below. The dot
+            # character alone is fine because we still extract the field
+            # name from the resulting list (see the `field[0]` below). The
+            # 'ignore_columns' lookup also relies on this: it matches
+            # literal column names, not path fragments.
+            diffs = list(
+                diff(
+                    previous[id],
+                    current[id],
+                    ignore=ignore_columns,
+                    dot_notation=False,
+                )
+            )
             if diffs:
                 changes = {
                     "key": id,
                     "changes": {
-                        # field can be a list if id contained '.' - #7
+                        # field is a list because dot_notation=False makes
+                        # dictdiffer return every path as a list. The list
+                        # has length 1 for a top-level column name (even if
+                        # the name contains '.') - see issue #7.
                         field[0] if isinstance(field, list) else field: [
                             prev_value,
                             current_value,
