@@ -151,3 +151,14 @@ def test_missing_key_column_raises_clear_error():
     csv_text = "a,b,c\n1,2,3\n"
     with pytest.raises(ValueError, match=r"Key column 'z' not present"):
         load_csv(io.StringIO(csv_text), key="z")
+
+
+def test_compare_empty_input_raises_clear_error():
+    one = load_csv(io.StringIO(ONE), key="id")
+    empty = {}
+    with pytest.raises(ValueError, match=r"cannot compare empty input.*previous has 2 rows.*current has 0 rows"):
+        compare(one, empty)
+    with pytest.raises(ValueError, match=r"cannot compare empty input.*previous has 0 rows.*current has 2 rows"):
+        compare(empty, one)
+    with pytest.raises(ValueError, match=r"cannot compare empty input.*previous has 0 rows.*current has 0 rows"):
+        compare(empty, empty)

@@ -86,6 +86,13 @@ def _simplify_json_row(r, common_keys):
 
 
 def compare(previous, current, show_unchanged=False):
+    if not previous or not current:
+        raise ValueError(
+            "csv-diff: cannot compare empty input "
+            "(previous has {prev} rows, current has {curr} rows)".format(
+                prev=len(previous), curr=len(current)
+            )
+        )
     result = {
         "added": [],
         "removed": [],
