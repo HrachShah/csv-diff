@@ -34,7 +34,7 @@ def load_csv(fp, key=None, dialect=None):
         # broken on perfectly normal input. See issue #29.
         if not line:
             continue
-        if len(line) < len(headings):
+        if len(line) != len(headings):
             raise ValueError(
                 f"CSV row on line {line_number} has {len(line)} field(s) "
                 f"but the header on line 1 has {len(headings)}; "

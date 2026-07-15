@@ -147,6 +147,12 @@ def test_mismatched_row_length_raises_clear_error():
         load_csv(io.StringIO(csv_text), key="a")
 
 
+def test_extra_csv_fields_raise_clear_error():
+    csv_text = "a,b,c\n1,2,3,4\n"
+    with pytest.raises(ValueError, match=r"line 2.*4 field.*3"):
+        load_csv(io.StringIO(csv_text), key="a")
+
+
 def test_missing_key_column_raises_clear_error():
     csv_text = "a,b,c\n1,2,3\n"
     with pytest.raises(ValueError, match=r"Key column 'z' not present"):
