@@ -1,5 +1,6 @@
-from csv_diff import load_csv, compare
+from csv_diff import load_csv, load_json, compare
 import io
+import pytest
 
 ONE = """id,name,age
 1,Cleo,4
@@ -115,3 +116,13 @@ def test_tsv():
         "columns_added": [],
         "columns_removed": [],
     } == diff
+
+
+def test_load_json_rejects_non_object_items():
+    with pytest.raises(ValueError, match="only objects"):
+        load_json(io.StringIO("[{\"id\": 1}, 2]"), key="id")
+
+
+def test_load_json_rejects_non_array_input():
+    with pytest.raises(ValueError, match="array of objects"):
+        load_json(io.StringIO("{\"id\": 1}"), key="id")
