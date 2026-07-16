@@ -118,6 +118,11 @@ def test_tsv():
     } == diff
 
 
+def test_load_csv_rejects_rows_with_wrong_field_count():
+    with pytest.raises(ValueError, match=r"CSV row 2 has 2 fields; expected 3"):
+        load_csv(io.StringIO("id,name,age\n1,Cleo"), key="id")
+
+
 def test_load_json_rejects_non_object_items():
     with pytest.raises(ValueError, match="only objects"):
         load_json(io.StringIO("[{\"id\": 1}, 2]"), key="id")

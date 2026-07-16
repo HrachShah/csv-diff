@@ -19,7 +19,14 @@ def load_csv(fp, key=None, dialect=None):
         headings = next(fp)
     except StopIteration:
         raise ValueError("CSV input is empty (no header row found)")
-    rows = [dict(zip(headings, line)) for line in fp]
+    rows = []
+    for line_number, line in enumerate(fp, start=2):
+        if len(line) != len(headings):
+            raise ValueError(
+                f"CSV row {line_number} has {len(line)} fields; "
+                f"expected {len(headings)}"
+            )
+        rows.append(dict(zip(headings, line)))
     if key:
         keyfn = lambda r: r[key]
     else:
