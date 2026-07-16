@@ -40,6 +40,37 @@ def json_files(tmpdir):
     return str(one), str(two)
 
 
+def test_cli_closes_input_files(tmpdir, monkeypatch):
+    one = tmpdir / "one.csv"
+    one.write(ONE)
+    two = tmpdir / "two.csv"
+    two.write(TWO)
+    opened = []
+
+    class TrackingFile:
+        def __init__(self, fp):
+            self.fp = fp
+            opened.append(self)
+
+        def __enter__(self):
+            return self.fp
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            self.fp.close()
+
+    original_open = open
+
+    def tracking_open(filename, *args, **kwargs):
+        return TrackingFile(original_open(filename, *args, **kwargs))
+
+    monkeypatch.setattr(cli, "open", tracking_open, raising=False)
+    result = CliRunner().invoke(cli.cli, [str(one), str(two), "--key", "id"])
+
+    assert result.exit_code == 0
+    assert len(opened) == 2
+    assert all(item.fp.closed for item in opened)
+
+
 def test_human_cli(tmpdir):
     one = tmpdir / "one.csv"
     one.write(ONE)
