@@ -52,6 +52,10 @@ TEN = """id,name,age
 2,Pancakes,3"""
 
 
+def test_load_empty_csv():
+    assert load_csv(io.StringIO(""), key="id") == {}
+
+
 def test_row_changed():
     diff = compare(
         load_csv(io.StringIO(ONE), key="id"), load_csv(io.StringIO(TWO), key="id")

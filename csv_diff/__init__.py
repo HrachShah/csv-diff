@@ -15,7 +15,12 @@ def load_csv(fp, key=None, dialect=None):
             # Oh well, we tried. Fallback to the default.
             pass
     fp = csv.reader(fp, dialect=(dialect or "excel"))
-    headings = next(fp)
+    try:
+        headings = next(fp)
+    except StopIteration:
+        return {}
+    if not headings:
+        return {}
     rows = [dict(zip(headings, line)) for line in fp]
     if key:
         keyfn = lambda r: r[key]
@@ -77,12 +82,12 @@ def compare(previous, current, show_unchanged=False):
         current_columns = set()
     ignore_columns = None
     if previous_columns != current_columns:
-        result["columns_added"] = [
+        result["columns_added"] = sorted(
             c for c in current_columns if c not in previous_columns
-        ]
-        result["columns_removed"] = [
+        )
+        result["columns_removed"] = sorted(
             c for c in previous_columns if c not in current_columns
-        ]
+        )
         ignore_columns = current_columns.symmetric_difference(previous_columns)
     # Have any rows been removed or added?
     removed = [id for id in previous if id not in current]
