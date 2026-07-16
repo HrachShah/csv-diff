@@ -34,6 +34,8 @@ def load_csv(fp, key=None, dialect=None):
         # broken on perfectly normal input. See issue #29.
         if not line:
             continue
+        if len(line) == len(headings) + 1 and line[-1] == "":
+            line.pop()
         if len(line) != len(headings):
             raise ValueError(
                 f"CSV row on line {line_number} has {len(line)} field(s) "
