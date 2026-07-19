@@ -1,6 +1,9 @@
-import click
+from contextlib import ExitStack
 import json as std_json
-from . import load_csv, load_json, compare, human_text
+
+import click
+
+from . import compare, human_text, load_csv, load_json
 
 
 @click.command()
@@ -62,16 +65,18 @@ def cli(previous, current, key, format, json, singular, plural, show_unchanged, 
             ctx=click.get_current_context(),
         )
 
-    def load(filename):
-        if format == "json":
-            with open(filename) as f:
-                return load_json(f, key=key)
-        else:
-            with open(filename, newline="") as f:
-                return load_csv(f, key=key, dialect=dialect.get(format))
+    with ExitStack() as stack:
+        def load(filename):
+            if format == "json":
+                return load_json(stack.enter_context(open(filename)), key=key)
+            return load_csv(
+                stack.enter_context(open(filename, newline="")),
+                key=key,
+                dialect=dialect.get(format),
+            )
 
-    previous_data = load(previous)
-    current_data = load(current)
+        previous_data = load(previous)
+        current_data = load(current)
 
     diff = compare(previous_data, current_data, show_unchanged)
     if json:
