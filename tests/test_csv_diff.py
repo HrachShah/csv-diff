@@ -123,6 +123,20 @@ def test_load_csv_rejects_rows_with_wrong_field_count():
         load_csv(io.StringIO("id,name,age\n1,Cleo"), key="id")
 
 
+def test_load_csv_rejects_missing_or_duplicate_key_values():
+    with pytest.raises(ValueError, match="not present in the header"):
+        load_csv(io.StringIO("id,name\n1,Cleo"), key="missing")
+    with pytest.raises(ValueError, match="contains duplicate value '1'"):
+        load_csv(io.StringIO("id,name\n1,Cleo\n1,Pancakes"), key="id")
+
+
+def test_load_json_rejects_missing_or_duplicate_key_values():
+    with pytest.raises(ValueError, match="not present in the input"):
+        load_json(io.StringIO("[{\"id\": 1}]"), key="missing")
+    with pytest.raises(ValueError, match="contains duplicate value 1"):
+        load_json(io.StringIO("[{\"id\": 1}, {\"id\": 1}]"), key="id")
+
+
 def test_load_json_rejects_non_object_items():
     with pytest.raises(ValueError, match="only objects"):
         load_json(io.StringIO("[{\"id\": 1}, 2]"), key="id")

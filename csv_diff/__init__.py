@@ -28,12 +28,20 @@ def load_csv(fp, key=None, dialect=None):
             )
         rows.append(dict(zip(headings, line)))
     if key:
+        if key not in headings:
+            raise ValueError(f"CSV key column {key!r} is not present in the header")
         keyfn = lambda r: r[key]
     else:
         keyfn = lambda r: hashlib.sha1(
             json.dumps(r, sort_keys=True).encode("utf8")
         ).hexdigest()
-    return {keyfn(r): r for r in rows}
+    result = {}
+    for row in rows:
+        row_key = keyfn(row)
+        if row_key in result:
+            raise ValueError(f"CSV key column {key!r} contains duplicate value {row_key!r}")
+        result[row_key] = row
+    return result
 
 
 def load_json(fp, key=None):
@@ -46,12 +54,21 @@ def load_json(fp, key=None):
     for item in raw_list:
         common_keys.update(item.keys())
     if key:
+        if key not in common_keys:
+            raise ValueError(f"JSON key field {key!r} is not present in the input")
         keyfn = lambda r: r[key]
     else:
         keyfn = lambda r: hashlib.sha1(
             json.dumps(r, sort_keys=True).encode("utf8")
         ).hexdigest()
-    return {keyfn(r): _simplify_json_row(r, common_keys) for r in raw_list}
+    result = {}
+    for row in raw_list:
+        row = _simplify_json_row(row, common_keys)
+        row_key = keyfn(row)
+        if row_key in result:
+            raise ValueError(f"JSON key field {key!r} contains duplicate value {row_key!r}")
+        result[row_key] = row
+    return result
 
 
 def _simplify_json_row(r, common_keys):

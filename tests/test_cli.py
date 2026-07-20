@@ -2,7 +2,7 @@ from click.testing import CliRunner
 from csv_diff import cli, load_csv
 import csv
 import pytest
-from .test_csv_diff import ONE, ONE_TSV, TWO, TWO_TSV, THREE, FIVE
+from .test_csv_diff import ONE, ONE_TSV, TWO, TWO_TSV, THREE
 import io
 import json
 from textwrap import dedent
@@ -64,7 +64,7 @@ def test_human_cli_alternative_names(tmpdir):
     one = tmpdir / "one.csv"
     one.write(ONE)
     five = tmpdir / "five.csv"
-    five.write(FIVE)
+    five.write("id,name,age\n1,Cleo,5\n2,Pancakes,2\n3,Bailey,1\n4,Carl,7")
     result = CliRunner().invoke(
         cli.cli,
         [str(one), str(five), "--key", "id", "--singular", "tree", "--plural", "trees"],
