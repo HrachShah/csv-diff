@@ -18,12 +18,22 @@ def load_csv(fp, key=None, dialect=None):
     headings = next(fp)
     rows = [dict(zip(headings, line)) for line in fp]
     if key:
-        keyfn = lambda r: r[key]
+        def keyfn(row):
+            value = row.get(key)
+            if value is None or value == "":
+                raise ValueError(f"Key column {key!r} contains a null value")
+            return value
     else:
         keyfn = lambda r: hashlib.sha1(
             json.dumps(r, sort_keys=True).encode("utf8")
         ).hexdigest()
-    return {keyfn(r): r for r in rows}
+    indexed = {}
+    for row in rows:
+        row_key = keyfn(row)
+        if row_key in indexed:
+            raise ValueError(f"Duplicate key value: {row_key!r}")
+        indexed[row_key] = row
+    return indexed
 
 
 def load_json(fp, key=None):
@@ -33,12 +43,22 @@ def load_json(fp, key=None):
     for item in raw_list:
         common_keys.update(item.keys())
     if key:
-        keyfn = lambda r: r[key]
+        def keyfn(row):
+            if key not in row or row[key] is None:
+                raise ValueError(f"Key column {key!r} contains a null value")
+            return row[key]
     else:
         keyfn = lambda r: hashlib.sha1(
             json.dumps(r, sort_keys=True).encode("utf8")
         ).hexdigest()
-    return {keyfn(r): _simplify_json_row(r, common_keys) for r in raw_list}
+    indexed = {}
+    for row in raw_list:
+        row = _simplify_json_row(row, common_keys)
+        row_key = keyfn(row)
+        if row_key in indexed:
+            raise ValueError(f"Duplicate key value: {row_key!r}")
+        indexed[row_key] = row
+    return indexed
 
 
 def _simplify_json_row(r, common_keys):
