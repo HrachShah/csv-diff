@@ -115,3 +115,13 @@ def test_tsv():
         "columns_added": [],
         "columns_removed": [],
     } == diff
+
+
+def test_load_csv_rejects_null_key_values():
+    with pytest.raises(ValueError, match="contains a null value"):
+        load_csv(io.StringIO("id,name\n,Cleo"), key="id")
+
+
+def test_load_json_rejects_null_key_values():
+    with pytest.raises(ValueError, match="contains a null value"):
+        load_json(io.StringIO('[{"id": null, "name": "Cleo"}]'), key="id")
