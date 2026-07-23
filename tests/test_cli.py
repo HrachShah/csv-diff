@@ -300,3 +300,13 @@ def test_diff_with_extras(tmpdir):
     """
     ).strip()
     assert result.output.strip() == expected
+
+
+def test_cli_closes_input_files(tmpdir, monkeypatch):
+    previous = tmpdir.join("previous.csv")
+    current = tmpdir.join("current.csv")
+    previous.write("id,name\n1,Cleo\n")
+    current.write("id,name\n1,Clio\n")
+    result = CliRunner().invoke(cli.cli, [str(previous), str(current), "--key=id"])
+    assert result.exit_code == 0
+    assert "1 row changed" in result.output
