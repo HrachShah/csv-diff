@@ -23,7 +23,12 @@ def load_csv(fp, key=None, dialect=None):
         return {}
     rows = [dict(zip(headings, line)) for line in fp]
     if key:
-        keyfn = lambda r: r[key]
+        def keyfn(r):
+            if key not in r:
+                raise KeyError(
+                    f"Column {key!r} not found in CSV header {list(headings)!r}"
+                )
+            return r[key]
     else:
         keyfn = lambda r: hashlib.sha1(
             json.dumps(r, sort_keys=True).encode("utf8")
@@ -38,7 +43,12 @@ def load_json(fp, key=None):
     for item in raw_list:
         common_keys.update(item.keys())
     if key:
-        keyfn = lambda r: r[key]
+        def keyfn(r):
+            if key not in r:
+                raise KeyError(
+                    f"Column {key!r} not found in JSON record {list(r.keys())!r}"
+                )
+            return r[key]
     else:
         keyfn = lambda r: hashlib.sha1(
             json.dumps(r, sort_keys=True).encode("utf8")

@@ -1,3 +1,4 @@
+import pytest
 from csv_diff import load_csv, compare
 import io
 
@@ -166,3 +167,8 @@ def test_compare_both_empty():
         "columns_added": [],
         "columns_removed": [],
     }
+
+
+def test_load_csv_reports_missing_key_column():
+    with pytest.raises(KeyError, match="Column 'missing' not found"):
+        load_csv(io.StringIO("id,name\n1,Cleo\n"), key="missing")
