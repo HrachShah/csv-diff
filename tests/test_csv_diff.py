@@ -128,6 +128,16 @@ def test_load_json_rejects_null_key_values():
         load_json(io.StringIO('[{"id": null, "name": "Cleo"}]'), key="id")
 
 
+def test_load_json_rejects_non_object_items():
+    with pytest.raises(ValueError, match="array of objects"):
+        load_json(io.StringIO('[{"id": 1}, "not an object"]'))
+
+
+def test_load_json_rejects_non_array_root():
+    with pytest.raises(ValueError, match="array of objects"):
+        load_json(io.StringIO('{"id": 1}'))
+
+
 def test_load_csv_rejects_duplicate_key_values():
     with pytest.raises(ValueError, match="Duplicate key value: '1'"):
         load_csv(io.StringIO("id,name\n1,Cleo\n1,Pancakes"), key="id")
