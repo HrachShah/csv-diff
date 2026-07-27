@@ -38,7 +38,8 @@ def load_csv(fp, key=None, dialect=None):
 
 def load_json(fp, key=None):
     raw_list = json.load(fp)
-    assert isinstance(raw_list, list)
+    if not isinstance(raw_list, list):
+        raise TypeError("JSON input must contain a list of records")
     common_keys = set()
     for item in raw_list:
         common_keys.update(item.keys())

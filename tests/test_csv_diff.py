@@ -172,3 +172,10 @@ def test_compare_both_empty():
 def test_load_csv_reports_missing_key_column():
     with pytest.raises(KeyError, match="Column 'missing' not found"):
         load_csv(io.StringIO("id,name\n1,Cleo\n"), key="missing")
+
+
+def test_load_json_rejects_non_list_input():
+    with pytest.raises(TypeError, match="JSON input must contain a list"):
+        from csv_diff import load_json
+
+        load_json(io.StringIO('{"id": 1}'))
