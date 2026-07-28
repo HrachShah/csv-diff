@@ -146,3 +146,12 @@ def test_load_csv_rejects_duplicate_key_values():
 def test_load_json_rejects_duplicate_key_values():
     with pytest.raises(ValueError, match="Duplicate key value: 1"):
         load_json(io.StringIO('[{"id": 1, "name": "Cleo"}, {"id": 1, "name": "Pancakes"}]'), key="id")
+
+
+def test_load_csv_rejects_rows_with_wrong_field_count():
+    with pytest.raises(ValueError, match=r"Row 2 has 1 fields; expected at least 2"):
+        load_csv(io.StringIO("id,name\n1"), key="id")
+
+
+def test_load_csv_accepts_empty_input():
+    assert load_csv(io.StringIO(""), key="id") == {}

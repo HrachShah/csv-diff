@@ -15,8 +15,17 @@ def load_csv(fp, key=None, dialect=None):
             # Oh well, we tried. Fallback to the default.
             pass
     fp = csv.reader(fp, dialect=(dialect or "excel"))
-    headings = next(fp)
-    rows = [dict(zip(headings, line)) for line in fp]
+    try:
+        headings = next(fp)
+    except StopIteration:
+        return {}
+    rows = []
+    for line_number, line in enumerate(fp, 2):
+        if len(line) < len(headings):
+            raise ValueError(
+                f"Row {line_number} has {len(line)} fields; expected at least {len(headings)}"
+            )
+        rows.append(dict(zip(headings, line)))
     if key:
         def keyfn(row):
             value = row.get(key)
