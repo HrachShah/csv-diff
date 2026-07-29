@@ -25,6 +25,13 @@ def load_csv(fp, key=None, dialect=None):
             raise ValueError(
                 f"Row {line_number} has {len(line)} fields; expected at least {len(headings)}"
             )
+        if len(line) > len(headings):
+            extra_fields = line[len(headings):]
+            if any(extra_fields):
+                raise ValueError(
+                    f"Row {line_number} has {len(line)} fields; expected at most {len(headings)}"
+                )
+            line = line[:len(headings)]
         rows.append(dict(zip(headings, line)))
     if key:
         def keyfn(row):
