@@ -42,6 +42,8 @@ def load_json(fp, key=None):
         raise TypeError("JSON input must contain a list of records")
     common_keys = set()
     for item in raw_list:
+        if not isinstance(item, dict):
+            raise TypeError("JSON input records must be objects")
         common_keys.update(item.keys())
     if key:
         def keyfn(r):

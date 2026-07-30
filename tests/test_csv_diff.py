@@ -179,3 +179,10 @@ def test_load_json_rejects_non_list_input():
         from csv_diff import load_json
 
         load_json(io.StringIO('{"id": 1}'))
+
+
+def test_load_json_rejects_non_object_records():
+    from csv_diff import load_json
+
+    with pytest.raises(TypeError, match="JSON input records must be objects"):
+        load_json(io.StringIO('[{"id": 1}, null]'))
