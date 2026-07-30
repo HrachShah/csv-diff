@@ -128,6 +128,11 @@ def test_load_json_rejects_null_key_values():
         load_json(io.StringIO('[{"id": null, "name": "Cleo"}]'), key="id")
 
 
+def test_load_json_rejects_empty_key_values():
+    with pytest.raises(ValueError, match="contains a null value"):
+        load_json(io.StringIO('[{"id": "", "name": "Cleo"}]'), key="id")
+
+
 def test_load_json_rejects_non_object_items():
     with pytest.raises(ValueError, match="array of objects"):
         load_json(io.StringIO('[{"id": 1}, "not an object"]'))

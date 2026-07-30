@@ -63,7 +63,7 @@ def load_json(fp, key=None):
         common_keys.update(item.keys())
     if key:
         def keyfn(row):
-            if key not in row or row[key] is None:
+            if key not in row or row[key] is None or row[key] == "":
                 raise ValueError(f"Key column {key!r} contains a null value")
             return row[key]
     else:
