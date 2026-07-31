@@ -186,3 +186,8 @@ def test_load_json_rejects_non_object_records():
 
     with pytest.raises(TypeError, match="JSON input records must be objects"):
         load_json(io.StringIO('[{"id": 1}, null]'))
+
+
+def test_load_csv_rejects_duplicate_keys():
+    with pytest.raises(ValueError, match="Duplicate key '1' in CSV input"):
+        load_csv(io.StringIO("id,name\n1,Cleo\n1,Clio\n"), key="id")

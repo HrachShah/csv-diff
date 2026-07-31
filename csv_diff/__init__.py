@@ -33,7 +33,13 @@ def load_csv(fp, key=None, dialect=None):
         keyfn = lambda r: hashlib.sha1(
             json.dumps(r, sort_keys=True).encode("utf8")
         ).hexdigest()
-    return {keyfn(r): r for r in rows}
+    keyed_rows = {}
+    for row in rows:
+        row_key = keyfn(row)
+        if row_key in keyed_rows:
+            raise ValueError(f"Duplicate key {row_key!r} in CSV input")
+        keyed_rows[row_key] = row
+    return keyed_rows
 
 
 def load_json(fp, key=None):
