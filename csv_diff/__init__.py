@@ -62,7 +62,14 @@ def load_json(fp, key=None):
         keyfn = lambda r: hashlib.sha1(
             json.dumps(r, sort_keys=True).encode("utf8")
         ).hexdigest()
-    return {keyfn(r): _simplify_json_row(r, common_keys) for r in raw_list}
+    keyed_rows = {}
+    for item in raw_list:
+        raw_row = dict(item)
+        row_key = keyfn(raw_row)
+        if row_key in keyed_rows:
+            raise ValueError(f"Duplicate key {row_key!r} in JSON input")
+        keyed_rows[row_key] = _simplify_json_row(raw_row, common_keys)
+    return keyed_rows
 
 
 def _simplify_json_row(r, common_keys):

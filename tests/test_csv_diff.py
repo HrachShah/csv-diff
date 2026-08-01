@@ -1,6 +1,7 @@
 import pytest
 from csv_diff import load_csv, compare
 import io
+import json
 
 ONE = """id,name,age
 1,Cleo,4
@@ -191,3 +192,20 @@ def test_load_json_rejects_non_object_records():
 def test_load_csv_rejects_duplicate_keys():
     with pytest.raises(ValueError, match="Duplicate key '1' in CSV input"):
         load_csv(io.StringIO("id,name\n1,Cleo\n1,Clio\n"), key="id")
+
+
+def test_load_json_rejects_duplicate_keys():
+    from csv_diff import load_json
+
+    with pytest.raises(ValueError, match="Duplicate key 1 in JSON input"):
+        load_json(io.StringIO('[{"id": 1, "name": "Cleo"}, {"id": 1, "name": "Clio"}]'), key="id")
+
+
+def test_load_json_does_not_mutate_input_records():
+    from csv_diff import load_json
+
+    source = [{"id": 1, "labels": ["one"]}]
+    result = load_json(io.StringIO(json.dumps(source)), key="id")
+
+    assert source == [{"id": 1, "labels": ["one"]}]
+    assert result[1]["labels"] == '["one"]'
