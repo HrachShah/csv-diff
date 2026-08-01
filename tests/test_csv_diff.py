@@ -158,6 +158,11 @@ def test_load_csv_rejects_rows_with_wrong_field_count():
         load_csv(io.StringIO("id,name\n1"), key="id")
 
 
+def test_load_csv_rejects_duplicate_header_fields():
+    with pytest.raises(ValueError, match="duplicate field names"):
+        load_csv(io.StringIO("id,name,name\n1,Cleo,4"), key="id")
+
+
 def test_load_csv_accepts_empty_input():
     assert load_csv(io.StringIO(""), key="id") == {}
 

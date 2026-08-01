@@ -19,6 +19,8 @@ def load_csv(fp, key=None, dialect=None):
         headings = next(fp)
     except StopIteration:
         return {}
+    if len(headings) != len(set(headings)):
+        raise ValueError("CSV header contains duplicate field names")
     rows = []
     for line_number, line in enumerate(fp, 2):
         if len(line) < len(headings):
