@@ -1,4 +1,5 @@
-from csv_diff import load_csv, compare
+from csv_diff import load_csv, load_json, compare
+import pytest
 import io
 
 ONE = """id,name,age
@@ -115,3 +116,8 @@ def test_tsv():
         "columns_added": [],
         "columns_removed": [],
     } == diff
+
+
+def test_load_json_rejects_non_array_root():
+    with pytest.raises(ValueError, match="JSON input must contain an array of records"):
+        load_json(io.StringIO("{\"id\": 1}"), key="id")
