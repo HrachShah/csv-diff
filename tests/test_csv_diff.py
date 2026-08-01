@@ -1,4 +1,5 @@
 from csv_diff import load_csv, compare
+import pytest
 import io
 
 ONE = """id,name,age
@@ -115,3 +116,8 @@ def test_tsv():
         "columns_added": [],
         "columns_removed": [],
     } == diff
+
+
+def test_load_csv_rejects_rows_with_extra_fields():
+    with pytest.raises(ValueError, match=r"CSV row 2 has 4 fields; expected 3"):
+        load_csv(io.StringIO("id,name,age\n1,Cleo,4,unexpected\n"), key="id")
