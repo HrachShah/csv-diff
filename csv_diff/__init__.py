@@ -74,6 +74,8 @@ def load_json(fp, key=None):
         ).hexdigest()
     indexed = {}
     for row in raw_list:
+        if key and key in row and isinstance(row[key], (dict, list)):
+            raise ValueError(f"Key column {key!r} must contain a scalar value")
         row = _simplify_json_row(row, common_keys)
         row_key = keyfn(row)
         if row_key in indexed:

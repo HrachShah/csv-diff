@@ -133,6 +133,14 @@ def test_load_json_rejects_empty_key_values():
         load_json(io.StringIO('[{"id": "", "name": "Cleo"}]'), key="id")
 
 
+def test_load_json_rejects_composite_key_values():
+    with pytest.raises(ValueError, match="must contain a scalar value"):
+        load_json(io.StringIO('[{"id": [1, 2], "name": "Cleo"}]'), key="id")
+
+    with pytest.raises(ValueError, match="must contain a scalar value"):
+        load_json(io.StringIO('[{"id": {"part": 1}, "name": "Cleo"}]'), key="id")
+
+
 def test_load_json_rejects_non_object_items():
     with pytest.raises(ValueError, match="array of objects"):
         load_json(io.StringIO('[{"id": 1}, "not an object"]'))
