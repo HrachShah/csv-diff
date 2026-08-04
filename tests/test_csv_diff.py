@@ -140,6 +140,13 @@ def test_load_json_rejects_composite_key_values():
     with pytest.raises(ValueError, match="must contain a scalar value"):
         load_json(io.StringIO('[{"id": {"part": 1}, "name": "Cleo"}]'), key="id")
 
+def test_load_json_rejects_non_finite_key_values():
+    with pytest.raises(ValueError, match="must contain a finite value"):
+        load_json(io.StringIO('[{"id": NaN, "name": "Cleo"}]'), key="id")
+
+    with pytest.raises(ValueError, match="must contain a finite value"):
+        load_json(io.StringIO('[{"id": Infinity, "name": "Cleo"}]'), key="id")
+
 
 def test_load_json_rejects_non_object_items():
     with pytest.raises(ValueError, match="array of objects"):

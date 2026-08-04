@@ -2,6 +2,8 @@ import csv
 from dictdiffer import diff
 import json
 import hashlib
+import math
+import hashlib
 
 
 def load_csv(fp, key=None, dialect=None):
@@ -76,6 +78,8 @@ def load_json(fp, key=None):
     for row in raw_list:
         if key and key in row and isinstance(row[key], (dict, list)):
             raise ValueError(f"Key column {key!r} must contain a scalar value")
+        if key and key in row and isinstance(row[key], float) and not math.isfinite(row[key]):
+            raise ValueError(f"Key column {key!r} must contain a finite value")
         row = _simplify_json_row(row, common_keys)
         row_key = keyfn(row)
         if row_key in indexed:
