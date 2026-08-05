@@ -76,6 +76,8 @@ def load_json(fp, key=None):
         ).hexdigest()
     indexed = {}
     for row in raw_list:
+        if key and key in row and isinstance(row[key], bool):
+            raise ValueError(f"Key column {key!r} must contain a non-boolean scalar value")
         if key and key in row and isinstance(row[key], (dict, list)):
             raise ValueError(f"Key column {key!r} must contain a scalar value")
         if key and key in row and isinstance(row[key], float) and not math.isfinite(row[key]):
