@@ -190,3 +190,16 @@ def test_load_csv_accepts_empty_input():
 def test_load_csv_rejects_nonempty_extra_fields():
     with pytest.raises(ValueError, match=r"Row 2 has 3 fields; expected at most 2"):
         load_csv(io.StringIO("id,name\n1,Cleo,unexpected"), key="id")
+
+
+def test_load_csv_accepts_stream_without_seekable_method():
+    class ReadOnlyStream:
+        def __init__(self, value):
+            self.value = value
+
+        def __iter__(self):
+            return iter(self.value.splitlines())
+
+    result = load_csv(ReadOnlyStream("id,name\n1,Cleo"), key="id")
+
+    assert result == {"1": {"id": "1", "name": "Cleo"}}
