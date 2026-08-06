@@ -73,7 +73,7 @@ def cli(previous, current, key, format, json, singular, plural, show_unchanged, 
     previous_data = load(previous)
     current_data = load(current)
 
-    diff = compare(previous_data, current_data, show_unchanged)
+    diff = compare(previous_data, current_data, show_unchanged, key=key)
     if json:
         print(std_json.dumps(diff, indent=4))
     else:

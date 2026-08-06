@@ -153,6 +153,11 @@ def test_load_json_rejects_non_finite_key_values():
         load_json(io.StringIO('[{"id": Infinity, "name": "Cleo"}]'), key="id")
 
 
+def test_load_json_rejects_nested_non_finite_key_values():
+    with pytest.raises(ValueError, match="must contain a finite value"):
+        load_json(io.StringIO('[{"id": -Infinity, "name": "Cleo"}]'), key="id")
+
+
 def test_load_json_rejects_non_object_items():
     with pytest.raises(ValueError, match="array of objects"):
         load_json(io.StringIO('[{"id": 1}, "not an object"]'))

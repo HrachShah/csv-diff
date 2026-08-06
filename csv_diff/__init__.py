@@ -105,7 +105,7 @@ def _simplify_json_row(r, common_keys):
     return r
 
 
-def compare(previous, current, show_unchanged=False):
+def compare(previous, current, show_unchanged=False, key=None):
     result = {
         "added": [],
         "removed": [],
@@ -167,7 +167,7 @@ def compare(previous, current, show_unchanged=False):
                     changes["unchanged"] = {
                         field: value
                         for field, value in previous[id].items()
-                        if field not in changes["changes"] and field != "id"
+                        if field not in changes["changes"] and field != key
                     }
                 result["changed"].append(changes)
     return result

@@ -26,6 +26,7 @@ def test_row_changed_show_unchanged():
         load_csv(io.StringIO(ONE), key="id"),
         load_csv(io.StringIO(TWO), key="id"),
         show_unchanged=True,
+        key="id",
     )
     assert (
         dedent(
@@ -222,3 +223,13 @@ def test_no_key():
         ).strip()
         == human_text(diff)
     )
+
+
+def test_row_changed_show_unchanged_omits_custom_key():
+    diff = compare(
+        load_csv(io.StringIO("code,name,age\nA,Cleo,4"), key="code"),
+        load_csv(io.StringIO("code,name,age\nA,Cleo,5"), key="code"),
+        show_unchanged=True,
+        key="code",
+    )
+    assert diff["changed"][0]["unchanged"] == {"name": "Cleo"}
