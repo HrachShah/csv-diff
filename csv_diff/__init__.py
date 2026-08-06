@@ -21,7 +21,19 @@ def load_csv(fp, key=None, dialect=None):
         return {}
     if not headings:
         return {}
-    rows = [dict(zip(headings, line)) for line in fp]
+    rows = []
+    for line in fp:
+        if not line:
+            continue
+        if len(line) != len(headings):
+            if len(line) > len(headings) and not any(line[len(headings):]):
+                line = line[:len(headings)]
+            else:
+                raise ValueError(
+                    f"CSV row ending at line {fp.line_num} has {len(line)} fields; "
+                    f"expected {len(headings)}"
+                )
+        rows.append(dict(zip(headings, line)))
     if key:
         def keyfn(r):
             if key not in r:
