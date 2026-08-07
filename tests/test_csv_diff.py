@@ -1,5 +1,6 @@
 from csv_diff import load_csv, compare
 import io
+import pytest
 
 ONE = """id,name,age
 1,Cleo,4
@@ -115,3 +116,13 @@ def test_tsv():
         "columns_added": [],
         "columns_removed": [],
     } == diff
+
+
+def test_load_csv_rejects_duplicate_headers():
+    with pytest.raises(ValueError, match="duplicate field names"):
+        load_csv(io.StringIO("id,name,name\n1,Cleo,4"), key="id")
+
+
+def test_load_csv_rejects_ragged_rows():
+    with pytest.raises(ValueError, match=r"Row 2 has 1 fields; expected 2"):
+        load_csv(io.StringIO("id,name\n1"), key="id")

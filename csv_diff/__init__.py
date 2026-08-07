@@ -5,7 +5,11 @@ import hashlib
 
 
 def load_csv(fp, key=None, dialect=None):
-    if dialect is None and fp.seekable():
+    try:
+        seekable = fp.seekable()
+    except (AttributeError, OSError):
+        seekable = False
+    if dialect is None and seekable:
         # Peek at first 1MB to sniff the delimiter and other dialect details
         peek = fp.read(1024**2)
         fp.seek(0)
@@ -15,8 +19,19 @@ def load_csv(fp, key=None, dialect=None):
             # Oh well, we tried. Fallback to the default.
             pass
     fp = csv.reader(fp, dialect=(dialect or "excel"))
-    headings = next(fp)
-    rows = [dict(zip(headings, line)) for line in fp]
+    try:
+        headings = next(fp)
+    except StopIteration:
+        return {}
+    if len(headings) != len(set(headings)):
+        raise ValueError("CSV header contains duplicate field names")
+    rows = []
+    for line_number, line in enumerate(fp, 2):
+        if len(line) != len(headings):
+            raise ValueError(
+                f"Row {line_number} has {len(line)} fields; expected {len(headings)}"
+            )
+        rows.append(dict(zip(headings, line)))
     if key:
         keyfn = lambda r: r[key]
     else:
