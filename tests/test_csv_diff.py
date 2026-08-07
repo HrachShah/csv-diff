@@ -121,3 +121,20 @@ def test_tsv():
 def test_load_json_rejects_non_array_root():
     with pytest.raises(ValueError, match="JSON input must contain an array of records"):
         load_json(io.StringIO("{\"id\": 1}"), key="id")
+
+
+def test_compare_empty_inputs():
+    assert compare({}, {}) == {
+        "added": [],
+        "removed": [],
+        "changed": [],
+        "columns_added": [],
+        "columns_removed": [],
+    }
+
+
+def test_compare_empty_previous_with_current_rows():
+    current = load_csv(io.StringIO(THREE), key="id")
+    result = compare({}, current)
+    assert result["added"] == list(current.values())
+    assert result["columns_added"] == ["age", "id", "name"]
