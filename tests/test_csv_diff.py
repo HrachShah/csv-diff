@@ -219,3 +219,8 @@ def test_load_csv_rejects_ragged_rows():
 def test_load_csv_rejects_rows_with_extra_fields():
     with pytest.raises(ValueError, match="CSV row ending at line 2 has 4 fields; expected 3"):
         load_csv(io.StringIO("id,name,age\n1,Cleo,4,unexpected\n"), key="id")
+
+
+def test_load_csv_rejects_duplicate_columns():
+    with pytest.raises(ValueError, match=r"Duplicate columns in CSV header: \['id'\]"):
+        load_csv(io.StringIO("id,name,id\n1,Cleo,duplicate\n"), key="id")

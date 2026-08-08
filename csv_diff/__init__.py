@@ -21,6 +21,9 @@ def load_csv(fp, key=None, dialect=None):
         return {}
     if not headings:
         return {}
+    if len(headings) != len(set(headings)):
+        duplicates = sorted({heading for heading in headings if headings.count(heading) > 1})
+        raise ValueError(f"Duplicate columns in CSV header: {duplicates!r}")
     rows = []
     for line in fp:
         if not line:
