@@ -222,3 +222,11 @@ def test_no_key():
         ).strip()
         == human_text(diff)
     )
+
+
+def test_row_changed_show_unchanged_excludes_custom_key():
+    previous = load_csv(io.StringIO("slug,name,age\na-1,Cleo,4"), key="slug")
+    current = load_csv(io.StringIO("slug,name,age\na-1,Cleo,5"), key="slug")
+    diff = compare(previous, current, show_unchanged=True)
+
+    assert diff["changed"][0]["unchanged"] == {"name": "Cleo"}

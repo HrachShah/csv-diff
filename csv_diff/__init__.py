@@ -157,10 +157,18 @@ def compare(previous, current, show_unchanged=False):
                     },
                 }
                 if show_unchanged:
+                    key_field = next(
+                        (
+                            field
+                            for field, value in previous[id].items()
+                            if value == id
+                        ),
+                        "id",
+                    )
                     changes["unchanged"] = {
                         field: value
                         for field, value in previous[id].items()
-                        if field not in changes["changes"] and field != "id"
+                        if field not in changes["changes"] and field != key_field
                     }
                 result["changed"].append(changes)
     return result
