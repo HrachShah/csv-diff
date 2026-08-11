@@ -34,7 +34,9 @@ def load_json(fp, key=None):
     if not isinstance(raw_list, list):
         raise ValueError("JSON input must contain an array of records")
     common_keys = set()
-    for item in raw_list:
+    for index, item in enumerate(raw_list):
+        if not isinstance(item, dict):
+            raise ValueError(f"JSON record at index {index} must be an object")
         common_keys.update(item.keys())
     if key:
         keyfn = lambda r: r[key]

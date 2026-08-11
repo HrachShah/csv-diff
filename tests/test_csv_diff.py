@@ -123,6 +123,11 @@ def test_load_json_rejects_non_array_root():
         load_json(io.StringIO("{\"id\": 1}"), key="id")
 
 
+def test_load_json_rejects_non_object_records():
+    with pytest.raises(ValueError, match="JSON record at index 1 must be an object"):
+        load_json(io.StringIO('[{"id": 1}, null]'), key="id")
+
+
 def test_compare_empty_inputs():
     assert compare({}, {}) == {
         "added": [],
